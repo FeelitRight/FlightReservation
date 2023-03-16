@@ -10,6 +10,8 @@ class FlightReservationSystemTest(unittest.TestCase):
         # Allocate a seat that is available
         result = self.flight.make_reservation('John', '1A')
         self.assertEqual(result, 'Seat 1A has been allocated.')
+        result = self.flight.available_seats
+        self.assertNotIn('1A', result)
         # Allocate a seat that is already occupied
         result = self.flight.make_reservation('Sara', '1A')
         self.assertEqual(result, 'Seat 1A is already occupied.')
@@ -19,6 +21,9 @@ class FlightReservationSystemTest(unittest.TestCase):
         self.flight.make_reservation('John', '1A')
         result = self.flight.change_reservation('John', '1A', '2B')
         self.assertEqual(result, 'Seat 1A of John has been changed to 2B.')
+        result = self.flight.available_seats
+        self.assertIn('1A', result)
+        self.assertNotIn('2B', result)
         # Change reservation with wrong passenger info
         result = self.flight.change_reservation('John','1A', '1B')
         self.assertEqual(result, 'No passenger with name John on seat 1A.')
@@ -26,8 +31,12 @@ class FlightReservationSystemTest(unittest.TestCase):
         self.assertEqual(result, 'No passenger with name Emma on seat 2B.')
         # Change reservation to another not available seat
         self.flight.make_reservation('Sara', '1B')
+        self.flight.make_reservation('John', '1A')
         result = self.flight.change_reservation('John','1A', '1B')
         self.assertEqual(result, 'Seat 1B is not available.')
+        result = self.flight.available_seats
+        self.assertNotIn('1A', result)
+        self.assertNotIn('1B', result)
     
     def test_get_seat_info(self):
         # Get seat info before any reservation is made
@@ -38,29 +47,6 @@ class FlightReservationSystemTest(unittest.TestCase):
         # Get seat info after a reservation is made
         result = self.flight.get_seat_info()
         self.assertEqual(result, 'Flight BA123 has 59 available seats.')
-        
-    def test_make_reservation(self):
-        # Make a reservation for an available seat
-        self.flight.make_reservation('John', '1A')
-        result = self.flight.available_seats
-        self.assertNotIn('1A', result)
-        # Make a reservation for an occupied seat
-        self.flight.make_reservation('Sara', '1A')
-        result = self.flight.available_seats
-        self.assertNotIn('1A', result)
-        
-    def test_change_reservation(self):
-        # Change reservation from an available seat to a new available seat
-        self.flight.make_reservation('John', '1A')
-        self.flight.change_reservation('John', '1A', '2B')
-        result = self.flight.available_seats
-        self.assertIn('1A', result)
-        self.assertNotIn('2B', result)
-        # Change reservation from an occupied seat to another occupied seat
-        self.flight.make_reservation('Sara', '3C')
-        self.flight.change_reservation('John', '2B', '3C')
-        result = self.flight.available_seats
-        self.assertNotIn('3C', result)
 
     def test_get_reservation_details(self):
         # Allocate a seat
